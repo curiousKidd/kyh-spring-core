@@ -1,7 +1,6 @@
 package hello.core.order;
 
 import hello.core.discount.DiscountPolicy;
-import hello.core.discount.FixDiscountPolicy;
 import hello.core.member.Member;
 import hello.core.member.MemberRepository;
 import hello.core.member.MemoryMemberRepository;
@@ -9,7 +8,22 @@ import hello.core.member.MemoryMemberRepository;
 public class OrderServiceImpl implements OrderService {
 
     private final MemberRepository memberRepository = new MemoryMemberRepository();
-    private final DiscountPolicy discountPolicy = new FixDiscountPolicy();
+
+    /**
+     * 해당 서비스를 변경하는 순간 클라이언트 코드를 변경해야한다
+     * 해당 서비스를 사용하기 위해서 인터페이스(DiscountPolicy) 뿐 아니라
+     * 구체클래스(new RateDiscountPolicy())도 의존 하고 있다
+     */
+    //    private final DiscountPolicy discountPolicy = new FixDiscountPolicy();
+    //    private final DiscountPolicy discountPolicy = new RateDiscountPolicy();
+
+    /**
+     * 이와 같은 방식으로 사용하면 해당 클라이언트 코드에서는 구현체를 변경해주지 않아도 여러가지의 구현 클래스를 사용가능하다
+     * 하지만 해당인터페이스의 구현클래스를 할당해주는 외부의 무언가가 필요하다
+     * IOC(제어의 역전) - 사용하는 서비스가 아닌 외부의 무언가가 제어하는 것
+     * DIP(의존관계 역전원칙) - 구현클래스가 아닌 인터페이스를 의존하는 것
+     */
+    private DiscountPolicy discountPolicy;
 
     @Override
     public Order createOrder(Long memberId, String itemName, int itemPrice) {
