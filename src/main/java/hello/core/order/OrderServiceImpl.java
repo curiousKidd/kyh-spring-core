@@ -22,6 +22,7 @@ public class OrderServiceImpl implements OrderService {
      * 하지만 해당인터페이스의 구현클래스를 할당해주는 외부의 무언가가 필요하다
      * IOC(제어의 역전) - 사용하는 서비스가 아닌 외부의 무언가가 제어하는 것
      * DIP(의존관계 역전원칙) - 구현클래스가 아닌 인터페이스를 의존하는 것
+     * - 객체지향의 5원칙 (SOLID) 중에 하나로 해당 원칙과  OCD 원칙을 지키기 위해서 spring를 사용함
      */
     private DiscountPolicy discountPolicy;
 
