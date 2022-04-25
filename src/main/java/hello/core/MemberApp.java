@@ -3,13 +3,20 @@ package hello.core;
 import hello.core.member.Grade;
 import hello.core.member.Member;
 import hello.core.member.MemberService;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 public class MemberApp {
 
     public static void main(String[] args) {
 
-        AppConfig appConfig = new AppConfig();
-        MemberService memberService = appConfig.memberService();
+        /**
+         * java코드로만 작성할때 사용하는 코드
+         */
+//        AppConfig appConfig = new AppConfig();
+//        MemberService memberService = appConfig.memberService();
+
+        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+        MemberService memberService = applicationContext.getBean("memberService", MemberService.class);
 
         /**
          * appConfig를 사용하면서 의존 관계를 외부에서 설정가능하게 되었고,
