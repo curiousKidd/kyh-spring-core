@@ -11,15 +11,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+/**
+ * 해당 어노테이션을 사용하지 않으면 싱글턴 컨테이너가 보장되지 않는다 (CGLIB)
+ * impl단에서 new를 사용해서 서비스를 선언한 것과 같은 기능이며
+ * 이는 스프링 컨테이너에서 관리하는 객체가 아니므로 DI를 위반한다
+ */
 public class AppConfig {
 
     @Bean
     public MemberService memberService() {
+        System.out.println("call AppConfig.memberService");
         return new MemberServiceImpl(memberRepository());
     }
 
     @Bean
     public OrderService orderService() {
+        System.out.println("call AppConfig.orderService");
         return new OrderServiceImpl(memberRepository(), discountPolicy());
     }
 
@@ -31,6 +38,7 @@ public class AppConfig {
 
     @Bean
     public MemoryMemberRepository memberRepository() {
+        System.out.println("call AppConfig.memberRepository");
         return new MemoryMemberRepository();
     }
 
