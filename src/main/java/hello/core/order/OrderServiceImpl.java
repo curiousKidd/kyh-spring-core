@@ -3,6 +3,7 @@ package hello.core.order;
 import hello.core.discount.DiscountPolicy;
 import hello.core.member.Member;
 import hello.core.member.MemberRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -26,12 +27,29 @@ public class OrderServiceImpl implements OrderService {
      */
 
     private final MemberRepository memberRepository;
-    private DiscountPolicy discountPolicy;
+    private final DiscountPolicy discountPolicy;
 
+
+    /**
+     * 수정자와 생성자 모두를 의존성 주입으로 사용하게 될 경우
+     * 생성자의 경우 스프링 컨테이너의 등록될 때 (스프링 실행시) 생성자를 사용하므로 먼저 의존성 주입
+     * 수정자의 경우 수정자를 사용할때 의존성이 비로서 주입된다
+     * 생성자 -> 수정자
+     */
+
+    //생성자를 활용한 의존성 주입
+    @Autowired //생성자가 하나인경우 어노테이션 생략 가능
     public OrderServiceImpl(MemberRepository memberRepository, DiscountPolicy discountPolicy) {
         this.memberRepository = memberRepository;
         this.discountPolicy = discountPolicy;
     }
+
+
+    //수정자를 활용한 의존성 주입(setter)
+//    @Autowired
+//    public void setMemberRepository(MemberRepository memberRepository){
+//        this.memberRepository = memberRepository;
+//    }
 
     @Override
     public Order createOrder(Long memberId, String itemName, int itemPrice) {
