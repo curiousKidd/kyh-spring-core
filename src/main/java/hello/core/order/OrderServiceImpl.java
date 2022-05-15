@@ -1,5 +1,6 @@
 package hello.core.order;
 
+import hello.core.annotation.MainDiscountPolicy;
 import hello.core.discount.DiscountPolicy;
 import hello.core.member.Member;
 import hello.core.member.MemberRepository;
@@ -7,8 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
+//@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
-
 
     /**
      * 해당 서비스를 변경하는 순간 클라이언트 코드를 변경해야한다
@@ -39,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 
     //생성자를 활용한 의존성 주입
     @Autowired //생성자가 하나인경우 어노테이션 생략 가능
-    public OrderServiceImpl(MemberRepository memberRepository, DiscountPolicy discountPolicy) {
+    public OrderServiceImpl(MemberRepository memberRepository, @MainDiscountPolicy DiscountPolicy discountPolicy) {
         this.memberRepository = memberRepository;
         this.discountPolicy = discountPolicy;
     }
@@ -50,7 +51,6 @@ public class OrderServiceImpl implements OrderService {
 //    public void setMemberRepository(MemberRepository memberRepository){
 //        this.memberRepository = memberRepository;
 //    }
-
     @Override
     public Order createOrder(Long memberId, String itemName, int itemPrice) {
         Member member = memberRepository.findById(memberId);
