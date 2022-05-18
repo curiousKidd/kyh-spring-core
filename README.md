@@ -293,6 +293,122 @@ ThreadA가 사용자A 코드를 호출하고 ThreadB가 사용자B 코드를 호
     - 왜냐하면 실제 프로그램과는 무관하게 진행 할 수 있기 때문
 4. 일반 메서드 주입
 
-# 자바빈 프로퍼티
-
+```
+자바빈 프로퍼티
 자바에서 사용한 필드의 값을 직접적으로 변경하지 않고, `setter`, `getter`를 활용해서 수정하는 규칙
+```
+## 옵션처리
+주입할 스프링 빈이 없어도 동작해야 할 때가 있다.
+그런데 `@Autowired` 만 사용하면 `required` 옵션의 기본값이 `true` 로 되어 있어서 자동 주입 대상이 없으면 오류가 발생한다
+
+**자동 주입 대상을 옵션으로 처리하는 방법은 다음과 같다.**
+- `@Autowired(required=false)` : 자동 주입할 대상이 없으면 수정자 메서드 자체가 호출 안됨
+- `org.springframework.lang.@Nullable` : 자동 주입할 대상이 없으면 null이 입력된다.
+- `Optional<>` : 자동 주입할 대상이 없으면 Optional.empty 가 입력된다
+
+``` java
+        //호출 안됨
+        @Autowired(required = false)
+        public void setNoBean1(Member member) {
+         System.out.println("setNoBean1 = " + member);
+        }
+        //null 호출
+        @Autowired
+        public void setNoBean2(@Nullable Member member) {
+         System.out.println("setNoBean2 = " + member);
+        }
+        //Optional.empty 호출
+        @Autowired(required = false)
+        public void setNoBean3(Optional<Member> member) {
+         System.out.println("setNoBean3 = " + member);
+        }
+```
+
+``` java
+// 출력결과
+setNoBean2 = null
+setNoBean3 = Optional.empty
+```
+***참고: @Nullable, Optional은 스프링 전반에 걸쳐서 지원된다. 예를 들어서 생성자 자동 주입에서 특정 필드에만 사용해도 된다.***
+
+## 생성자 주입을 선택해라!
+과거에는 수정자 주입과 필드 주입을 많이 사용했지만, 최근에는 스프링을 포함한 DI 프레임워크 대부분이
+생성자 주입을 권장한다. 그 이유는 다음과 같다.
+
+**불변**
+- 대부분의 의존관계 주입은 한번 일어나면 애플리케이션 종료시점까지 의존관계를 변경할 일이 없다. 오히려 대부분의 의존관계는 애플리케이션 종료 전까지 변하면 안된다.(불변해야 한다.)
+- 수정자 주입을 사용하면, setXxx 메서드를 public으로 열어두어야 한다.
+- 누군가 실수로 변경할 수 도 있고, 변경하면 안되는 메서드를 열어두는 것은 좋은 설계 방법이 아니다.
+- 생성자 주입은 객체를 생성할 때 딱 1번만 호출되므로 이후에 호출되는 일이 없다. 따라서 불변하게 설계할 수 있다.
+- 생성자 주입 방식을 선택하는 이유는 여러가지가 있지만, 프레임워크에 의존하지 않고, 순수한 자바 언어의 특징을 잘 살리는 방법이기도 하다.
+- 기본으로 생성자 주입을 사용하고, 필수 값이 아닌 경우에는 수정자 주입 방식을 옵션으로 부여하면 된다.
+- 생성자 주입과 수정자 주입을 동시에 사용할 수 있다.
+- 항상 생성자 주입을 선택해라! 그리고 가끔 옵션이 필요하면 수정자 주입을 선택해라. 필드 주입은 사용하지 않는게 좋다
+
+## lombok
+최근에는 생성자를 딱 1개 두고, @Autowired 를 생략하는 방법을 주로 사용한다. 
+여기에 Lombok 라이브러리의 @RequiredArgsConstructor 함께 사용하면 기능은 다 제공하면서, 코드는 깔끔하게 사용할 수 있다
+
+``` java
+//lombok 설정 추가 시작
+configurations {
+ compileOnly {
+ extendsFrom annotationProcessor
+ }
+}
+
+dependencies {
+ //lombok 라이브러리 추가 시작
+ compileOnly 'org.projectlombok:lombok'
+ annotationProcessor 'org.projectlombok:lombok'
+ testCompileOnly 'org.projectlombok:lombok'
+ testAnnotationProcessor 'org.projectlombok:lombok'
+ //lombok 라이브러리 추가 끝
+ }
+}
+//lombok 설정 추가 끝
+```
+
+`@Autowired` 는 타입(Type)으로 조회한다.
+그런데 만약 같은 타입의 스프링 빈이 2개 이상이라면 `NoUniqueBeanDefinitionException` 오류가 발생한다
+
+해당 오류를 해결 할 수 있는 방법은
+- @Autowired 필드 명 매칭    -> 사용하지 않는 것을 추천
+- @Qualifier @Qualifier끼리 매칭 빈 이름 매칭    -> 추가 구분자(부제목)를 달아줌으로써 구분할 수 있게 함
+- @Primary 사용   -> 우선권 부여
+
+## 우선순위
+`@Primary` 는 기본값 처럼 동작하는 것이고, `@Qualifier` 는 매우 상세하게 동작한다. 
+이런 경우 어떤 것이 우선권을 가져갈까? 
+스프링은 자동보다는 수동이, 넒은 범위의 선택권 보다는 좁은 범위의 선택권이 우선순위가 높다. 
+따라서 여기서도 @Qualifier 가 우선권이 높다.
+
+이렇게 해서 같은 타입의 스프링 빈이 두개이상 등록될 경우 `List`, `Map`로 받을 수 있다
+``` java
+@Test
+ void findAllBean() {
+         ApplicationContext ac = new AnnotationConfigApplicationContext(AutoAppConfig.class, DiscountService.class);
+         DiscountService discountService = ac.getBean(DiscountService.class);
+         Member member = new Member(1L, "userA", Grade.VIP);
+         int discountPrice = discountService.discount(member, 10000, "fixDiscountPolicy");
+         assertThat(discountService).isInstanceOf(DiscountService.class);
+         assertThat(discountPrice).isEqualTo(1000);
+ }
+ static class DiscountService {
+ private final Map<String, DiscountPolicy> policyMap;
+ private final List<DiscountPolicy> policies;
+ public DiscountService(Map<String, DiscountPolicy> policyMap,
+List<DiscountPolicy> policies) {
+         this.policyMap = policyMap;
+         this.policies = policies;
+         System.out.println("policyMap = " + policyMap);
+         System.out.println("policies = " + policies);
+ }
+ public int discount(Member member, int price, String discountCode) {
+         DiscountPolicy discountPolicy = policyMap.get(discountCode);
+         System.out.println("discountCode = " + discountCode);
+         System.out.println("discountPolicy = " + discountPolicy);
+         return discountPolicy.discount(member, price);
+ }
+ }
+```
